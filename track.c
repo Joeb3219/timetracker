@@ -143,7 +143,7 @@ void cmd_end(char* fileName, Entries* entries){
 void cmd_print(Entries* entries, char* numDays){
 	int numDaysInt = atoi(numDays);
 	unsigned int earliestTime = NOW - (numDaysInt * 60 * 60 * 24);
-	int i;
+	int i, totalDuration = 0;
 	Entry* entry;
 
 	for(i = 0; i < entries->num; i ++){
@@ -152,12 +152,18 @@ void cmd_print(Entries* entries, char* numDays){
 			printf("Task \"%s\": ", entry->taskName);
 			if(entry->end == 0){
 				printDifferenceBetweenTimestamps(entry->start, NOW);
+				totalDuration += (NOW - entry->start);
 			}else{
 				printDifferenceBetweenTimestamps(entry->start, entry->end);
+				totalDuration += (entry->end - entry->start);
 			}
 			printf(".\n");
 		}
 	}
+
+	printf("Total time: ");
+	printDifferenceBetweenTimestamps(0, totalDuration);
+	printf(".\n");
 }
 
 void cmd_duration(Entries* entries){
