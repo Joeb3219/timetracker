@@ -24,3 +24,4 @@ The `-d` flag prints out how long the most recent task has been going on for.
 The `-p` flag prints out all of the most recent tasks, within the last 13 days by default. This value can be changed via the `-n <number>` flag. So `./track -p 
 -n 8` will print all tasks within the last (8*24) hours.
 
+The `-r` flag will resume the last stopped task.

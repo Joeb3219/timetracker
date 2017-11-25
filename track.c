@@ -109,6 +109,8 @@ void cmd_start(char* fileName, Entries* entries, char* taskName){
 
 	addEntry(entries, entry);
 	writeEntries(fileName, entries);
+
+	printf("Beginning a task \"%s\".\n", taskName);
 }
 
 Entry* findFirstOngoingEntry(Entries* entries){
@@ -170,12 +172,22 @@ void cmd_duration(Entries* entries){
 	printf(".\n");
 }
 
+void cmd_resume(char* fileName, Entries* entries){
+	if(entries->num == 0){
+		printf("There are no entries to resume.\n");
+		return;
+	}
+	cmd_start(fileName, entries, entries->entries[entries->num - 1]->taskName);
+
+}
+
 int main(int argc, char** argv){
 
 	int startFlag = flagSet("-s");
 	int endFlag = flagSet("-e");
 	int durationFlag = flagSet("-d");
 	int printFlag = flagSet("-p");
+	int resumeFlag = flagSet("-r");
 	char* fileName = getArgOrDefault("-f", "time.txt");
 	char* taskName = getArgOrDefault("-t", "null");
 	char* printDuration = getArgOrDefault("-n", "14");
@@ -187,6 +199,7 @@ int main(int argc, char** argv){
 		printf("-e: Ends the latest timer.\n");
 		printf("-d: Duration. If a task is currently ongoing, detects how long it's been occuring for.\n");
 		printf("-p: Print. Prints all of the events within the last -n days.\n");
+		printf("-r: Resume. Copies the last entry name that occured, and resumes it at the current time.\n");
 		printf("-f: The file to use for storage. Defaults to \"time.txt\"\n");
 		printf("-t: The task name to utilize. Defaults to \"null\"\n");
 		printf("-n: The number of days to print. Defaults to 14.\n");
@@ -203,6 +216,8 @@ int main(int argc, char** argv){
 		cmd_print(entries, printDuration);
 	}else if(durationFlag){
 		cmd_duration(entries);
+	}else if(resumeFlag){
+		cmd_resume(fileName, entries);
 	}
 
 }
