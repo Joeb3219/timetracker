@@ -25,7 +25,7 @@ int isFlagSet(int argc, char** argv, char* flag){
 }
 
 void writeEntry(FILE* file, Entry* entry){
-	fprintf(file, "%d,%d,\"%s\"\n", entry->start, entry->end, entry->taskName);
+	fprintf(file, "%d,%d,%s\n", entry->start, entry->end, entry->taskName);
 }
 
 Entry* newEntry(){
@@ -42,7 +42,7 @@ Entry* readEntry(char* line){
 	// This wastes some space, but since the last two items are integers, the number of wasted bytes is no more than 4+2*(max length of a printed integer)
 	entry->taskName = malloc(sizeof(char) * (1 + strlen(line)));
 
-	sscanf(line, "%d,%d,%[^\"]s\n", &entry->start, &entry->end, entry->taskName);
+	sscanf(line, "%d,%d,%[^\n]s\n", &entry->start, &entry->end, entry->taskName);
 
 	return entry;
 }
