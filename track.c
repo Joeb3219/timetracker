@@ -76,12 +76,13 @@ Entries* loadEntries(char* fileName){
 
 	if(file == NULL) return entries;
 
-	char* line;
+	char* line = NULL;
 	size_t bytes;
 	while(getline(&line, &bytes, file) > 0){
 		entry = readEntry(line);
 		addEntry(entries, entry);
 	}
+	free(line);
 
 	fclose(file);
 	return entries;
@@ -215,7 +216,7 @@ int main(int argc, char** argv){
 	Entries* entries = loadEntries(fileName);
 
 	if(startFlag){
-		cmd_start(fileName, entries, taskName);
+		cmd_start(fileName, entries, strdup(taskName));
 	}else if(endFlag){
 		cmd_end(fileName, entries);
 	}else if(printFlag){
@@ -225,5 +226,15 @@ int main(int argc, char** argv){
 	}else if(resumeFlag){
 		cmd_resume(fileName, entries);
 	}
+
+
+	// Now free up all of the memory we allocated.
+	int i;
+	for(i = 0; i < entries->num; i ++){
+		free(entries->entries[i]->taskName);
+		free(entries->entries[i]);
+	}
+	free(entries->entries);
+	free(entries);
 
 }
