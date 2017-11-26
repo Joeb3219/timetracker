@@ -164,7 +164,7 @@ void cmd_print(Entries* entries, char* numDays){
 
 	printf("Total time: ");
 	printDifferenceBetweenTimestamps(0, totalDuration);
-	printf(".\n");
+	printf(" (%f hours).\n", (totalDuration / (60.0 * 60.0)));
 }
 
 void cmd_duration(Entries* entries){
