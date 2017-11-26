@@ -141,30 +141,133 @@ void cmd_end(char* fileName, Entries* entries){
 	printf(".\n");
 }
 
+time_t* getDayTimestamps(int daysBack){
+	int totalDays = daysBack + 1; // We want to include today, so we need an extra day.
+	int i = 0;
+	time_t* timestamps = malloc(sizeof(time_t) * totalDays);
+
+	time_t currenttimestamp;
+	struct tm* ts;
+	for(i = 0; i < totalDays; i ++){
+		currenttimestamp = NOW;
+		ts = localtime(&currenttimestamp);
+		ts->tm_mday -= i;
+		ts->tm_hour = ts->tm_min = ts->tm_sec = 0;
+		currenttimestamp = mktime(ts);
+		timestamps[totalDays - i - 1] = currenttimestamp;
+	}
+
+	return timestamps;
+}
+
+Entry* duplicateEntry(Entry* entry){
+	Entry* dup = malloc(sizeof(Entry));
+	dup->start = entry->start;
+	dup->end = entry->end;
+	dup->taskName = strdup(entry->taskName);
+	return dup;
+}
+
+Entries** getEntriesPerWeekday(int daysBack, Entries* entries){
+	int totalDays = daysBack + 1; // We want to include today, so we need an extra day.
+	Entries** days = malloc(sizeof(Entries*) * totalDays);
+	time_t* timestamps = getDayTimestamps(daysBack);
+	int i = 0, j = 0;
+	time_t endstamp;
+	Entry* entry;
+
+	for(i = 0; i < totalDays; i ++){
+		days[i] = malloc(sizeof(Entries));
+		days[i]->num = 0;
+		endstamp = timestamps[i] + (24 * 60 * 60);
+
+		for(j = 0; j < entries->num; j ++){
+			// First case is when the event is entirely within the group, in which case we just
+			if(entries->entries[j]->start >= timestamps[i] && entries->entries[j]->end == 0){
+				entry = duplicateEntry(entries->entries[j]);
+				entry->end = NOW;
+				addEntry(days[i], entry);
+
+			}else if(entries->entries[j]->start >= timestamps[i] && entries->entries[j]->end <= endstamp){
+				addEntry(days[i], duplicateEntry(entries->entries[j]));
+
+			}else if(entries->entries[j]->start >= timestamps[i] && entries->entries[j]->start < endstamp){
+				entry = duplicateEntry(entries->entries[j]);
+				entry->end = endstamp;
+				addEntry(days[i], entry);
+
+			}else if(entries->entries[j]->end <= endstamp && entries->entries[j]->end > timestamps[i]){
+				entry = duplicateEntry(entries->entries[j]);
+				entry->start = timestamps[i];
+				addEntry(days[i], entry);
+
+			}
+
+		}
+
+	}
+
+	free(timestamps);
+	return days;
+}
+
 void cmd_print(Entries* entries, char* numDays){
 	int numDaysInt = atoi(numDays);
 	unsigned int earliestTime = NOW - (numDaysInt * 60 * 60 * 24);
-	int i, totalDuration = 0;
+	int i, j, totalDuration = 0, dailyDuration = 0;
 	Entry* entry;
 
-	for(i = 0; i < entries->num; i ++){
-		entry = entries->entries[i];
-		if(entry->start >= earliestTime){
-			printf("Task \"%s\": ", entry->taskName);
-			if(entry->end == 0){
-				printDifferenceBetweenTimestamps(entry->start, NOW);
-				totalDuration += (NOW - entry->start);
-			}else{
-				printDifferenceBetweenTimestamps(entry->start, entry->end);
-				totalDuration += (entry->end - entry->start);
+	Entries** dailyEntries = getEntriesPerWeekday(numDaysInt, entries);
+	Entries* dayEntries;
+	time_t* timestamps = getDayTimestamps(numDaysInt);
+	struct tm* ts;
+
+
+	for(i = 0; i <= numDaysInt; i ++){
+		dailyDuration = 0;
+		dayEntries = dailyEntries[i];
+		if(dayEntries->num > 0){
+			ts = localtime(&timestamps[i]);
+			printf("== %d/%d/%d ==\n", (1900 + ts->tm_year), ts->tm_mon, ts->tm_mday);
+		}
+
+		for(j = 0; j < dayEntries->num; j ++){
+			printf("Task \"%s\": \t\t\t", dayEntries->entries[j]->taskName);
+			if(dayEntries->entries[j]->end != 0){
+				printDifferenceBetweenTimestamps(dayEntries->entries[j]->start, dayEntries->entries[j]->end);
+				dailyDuration += (dayEntries->entries[j]->end - dayEntries->entries[j]->start);
+			}
+			else{
+				printDifferenceBetweenTimestamps(dayEntries->entries[j]->start, NOW);
+				dailyDuration += (NOW - dayEntries->entries[j]->start);
 			}
 			printf(".\n");
+
+			// Free the entry
+			free(dayEntries->entries[j]->taskName);
+			free(dayEntries->entries[j]);
 		}
+
+		totalDuration += dailyDuration;
+		if(dayEntries->num > 0){
+			printf("Daily time: ");
+			printDifferenceBetweenTimestamps(0, dailyDuration);
+			printf(" (%f hours).\n", (dailyDuration / (60.0 * 60.0)));
+			printf("\n");
+		}
+
+		// Free the entries
+		if(dayEntries->num > 0) free(dayEntries->entries);
+		free(dayEntries);
 	}
 
 	printf("Total time: ");
 	printDifferenceBetweenTimestamps(0, totalDuration);
 	printf(" (%f hours).\n", (totalDuration / (60.0 * 60.0)));
+
+	// Free the entries array
+	free(dailyEntries);
+	free(timestamps);
 }
 
 void cmd_duration(Entries* entries){
