@@ -184,7 +184,7 @@ void cmd_resume(char* fileName, Entries* entries){
 		printf("There are no entries to resume.\n");
 		return;
 	}
-	cmd_start(fileName, entries, entries->entries[entries->num - 1]->taskName);
+	cmd_start(fileName, entries, strdup(entries->entries[entries->num - 1]->taskName));
 
 }
 
