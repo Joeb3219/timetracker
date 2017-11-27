@@ -8,6 +8,10 @@
 #define getArgOrDefault(A, B) ((getArgument(argc, argv, A) == NULL) ? B : getArgument(argc, argv, A))
 #define NOW (time(NULL))
 
+#define CLR_RED   "\x1B[31m"
+#define CLR_GREEN   "\x1B[32m"
+#define CLR_RESET "\x1B[0m"
+
 char* getArgument(int argc, char** argv, char* flag){
 	int i;
 	for(i = 0; i < argc - 1; i ++){
@@ -236,7 +240,8 @@ void cmd_print(Entries* entries, char* numDays){
 
 			ts = localtime(&dayEntries->entries[j]->start);
 
-			printf("Task \"%s\" (%d:%d:%d): \t", dayEntries->entries[j]->taskName, ts->tm_hour, ts->tm_min, ts->tm_sec);
+			printf(CLR_RED "%s" CLR_RESET, dayEntries->entries[j]->taskName);
+			printf(" (%d:%d:%d): \t", ts->tm_hour, ts->tm_min, ts->tm_sec);
 			if(dayEntries->entries[j]->end != 0){
 				printDifferenceBetweenTimestamps(dayEntries->entries[j]->start, dayEntries->entries[j]->end);
 				dailyDuration += (dayEntries->entries[j]->end - dayEntries->entries[j]->start);
@@ -256,8 +261,8 @@ void cmd_print(Entries* entries, char* numDays){
 		if(dayEntries->num > 0){
 			printf("Daily time: ");
 			printDifferenceBetweenTimestamps(0, dailyDuration);
-			printf(" (%f hours).\n", (dailyDuration / (60.0 * 60.0)));
-			printf("\n");
+			printf(CLR_GREEN "(%f hours)" CLR_RESET, (dailyDuration / (60.0 * 60.0)));
+			printf("\n\n");
 		}
 
 		// Free the entries
@@ -267,7 +272,7 @@ void cmd_print(Entries* entries, char* numDays){
 
 	printf("Total time: ");
 	printDifferenceBetweenTimestamps(0, totalDuration);
-	printf(" (%f hours).\n", (totalDuration / (60.0 * 60.0)));
+	printf(CLR_GREEN " (%f hours).\n" CLR_RESET, (totalDuration / (60.0 * 60.0)));
 
 	// Free the entries array
 	free(dailyEntries);
