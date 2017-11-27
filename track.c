@@ -88,7 +88,7 @@ Entries* loadEntries(char* fileName){
 	return entries;
 }
 
-void printDifferenceBetweenTimestamps(unsigned int a, unsigned int b){
+void printDifferenceBetweenTimestamps(time_t a, time_t b){
 	int difference = (b - a);
 	int numHours = 0;
 	int numMinutes = 0;
@@ -214,7 +214,7 @@ Entries** getEntriesPerWeekday(int daysBack, Entries* entries){
 
 void cmd_print(Entries* entries, char* numDays){
 	int numDaysInt = atoi(numDays);
-	unsigned int earliestTime = NOW - (numDaysInt * 60 * 60 * 24);
+	time_t earliestTime = NOW - (numDaysInt * 60 * 60 * 24);
 	int i, j, totalDuration = 0, dailyDuration = 0;
 	Entry* entry;
 
@@ -233,7 +233,10 @@ void cmd_print(Entries* entries, char* numDays){
 		}
 
 		for(j = 0; j < dayEntries->num; j ++){
-			printf("Task \"%s\": \t\t\t", dayEntries->entries[j]->taskName);
+
+			ts = localtime(&dayEntries->entries[j]->start);
+
+			printf("Task \"%s\" (%d:%d:%d): \t", dayEntries->entries[j]->taskName, ts->tm_hour, ts->tm_min, ts->tm_sec);
 			if(dayEntries->entries[j]->end != 0){
 				printDifferenceBetweenTimestamps(dayEntries->entries[j]->start, dayEntries->entries[j]->end);
 				dailyDuration += (dayEntries->entries[j]->end - dayEntries->entries[j]->start);

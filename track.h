@@ -1,7 +1,7 @@
 struct Entry{
 	char* taskName;
-	int start;
-	int end;
+	time_t start;
+	time_t end;
 };
 
 typedef struct Entry Entry;
