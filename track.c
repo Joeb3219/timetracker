@@ -183,11 +183,12 @@ Entries** getEntriesPerWeekday(int daysBack, Entries* entries){
 
 		for(j = 0; j < entries->num; j ++){
 			// First case is when the event is entirely within the group, in which case we just
-			if(entries->entries[j]->start >= timestamps[i] && entries->entries[j]->end == 0){
-				entry = duplicateEntry(entries->entries[j]);
-				entry->end = NOW;
-				addEntry(days[i], entry);
-
+			if(entries->entries[j]->end == 0){
+				if(entries->entries[j]->start >= timestamps[i] && entries->entries[j]->start < endstamp){
+					entry = duplicateEntry(entries->entries[j]);
+					entry->end = NOW;
+					addEntry(days[i], entry);
+				}
 			}else if(entries->entries[j]->start >= timestamps[i] && entries->entries[j]->end <= endstamp){
 				addEntry(days[i], duplicateEntry(entries->entries[j]));
 
