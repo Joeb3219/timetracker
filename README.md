@@ -1,4 +1,6 @@
 # TimeTracker
+![Screenshot of printing hours](https://i.imgur.com/XZrAWbz.png)
+
 A quick and dirty command line tool to track how long you've been working. 
 
 The program utilizes a diary system to keep track of task names and how long they've been worked on, one entry per line in a file.
