@@ -10,6 +10,7 @@
 
 #define CLR_RED   "\x1B[31m"
 #define CLR_GREEN   "\x1B[32m"
+#define CLR_ORANGE   "\x1B[33m"
 #define CLR_RESET "\x1B[0m"
 
 char* getArgument(int argc, char** argv, char* flag){
@@ -104,7 +105,8 @@ void printDifferenceBetweenTimestamps(time_t a, time_t b){
 	difference -= (numMinutes * 60);
 	numSeconds = difference;
 
-	printf("%d hours, %d minutes, and %d seconds", numHours, numMinutes, numSeconds);
+	printf(CLR_ORANGE "%d" CLR_RESET " hours, " CLR_ORANGE "%d" CLR_RESET " minutes, and " CLR_ORANGE "%d" CLR_RESET " seconds", numHours, numMinutes, 
+numSeconds);
 }
 
 void cmd_start(char* fileName, Entries* entries, char* taskName){
@@ -241,7 +243,7 @@ void cmd_print(Entries* entries, char* numDays){
 			ts = localtime(&dayEntries->entries[j]->start);
 
 			printf(CLR_RED "%s" CLR_RESET, dayEntries->entries[j]->taskName);
-			printf(" (%d:%d:%d): \t", ts->tm_hour, ts->tm_min, ts->tm_sec);
+			printf(" (" CLR_ORANGE "%02d" CLR_RESET ":" CLR_ORANGE "%02d" CLR_RESET "): \t", ts->tm_hour, ts->tm_min);
 			if(dayEntries->entries[j]->end != 0){
 				printDifferenceBetweenTimestamps(dayEntries->entries[j]->start, dayEntries->entries[j]->end);
 				dailyDuration += (dayEntries->entries[j]->end - dayEntries->entries[j]->start);
