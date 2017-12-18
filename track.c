@@ -89,7 +89,7 @@ void cmd_print(Entries* entries, char* numDays){
 		dayEntries = dailyEntries[i];
 		if(dayEntries->num > 0){
 			ts = localtime(&timestamps[i]);
-			printf("== %d/%d/%d ==\n", (1900 + ts->tm_year), ts->tm_mon, ts->tm_mday);
+			printf("== %d/%d/%d ==\n", (1900 + ts->tm_year), (ts->tm_mon + 1), ts->tm_mday);
 		}
 
 		for(j = 0; j < dayEntries->num; j ++){
