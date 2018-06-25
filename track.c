@@ -72,7 +72,7 @@ void cmd_end(char* fileName, Entries* entries){
 	printf(".\n");
 }
 
-void cmd_print(Entries* entries, char* numDays){
+void cmd_print(Entries* entries, char* numDays, char* filter){
 	int numDaysInt = atoi(numDays);
 	time_t earliestTime = NOW - (numDaysInt * 60 * 60 * 24);
 	int i, j, totalDuration = 0, dailyDuration = 0;
@@ -93,6 +93,8 @@ void cmd_print(Entries* entries, char* numDays){
 		}
 
 		for(j = 0; j < dayEntries->num; j ++){
+
+			if(filter != NULL && strstr(dayEntries->entries[j]->taskName, filter) == NULL) continue;
 
 			ts = localtime(&dayEntries->entries[j]->start);
 
@@ -135,6 +137,57 @@ void cmd_print(Entries* entries, char* numDays){
 	free(timestamps);
 }
 
+
+void cmd_hours(Entries* entries, char* filter){
+	int numDaysInt = 24;
+	int i, j, totalDuration = 0;
+	Entry* entry;
+
+	Entries** dailyEntries = getEntriesPerWeekday(numDaysInt, entries);
+	Entries* dayEntries;
+	time_t* timestamps = getDayTimestamps(numDaysInt);
+	struct tm* ts;
+
+
+	for(i = 0; i <= numDaysInt; i ++){
+		int dailyDuration = 0;
+		dayEntries = dailyEntries[i];
+		if(dayEntries->num > 0){
+			ts = localtime(&timestamps[i]);
+		}
+
+		for(j = 0; j < dayEntries->num; j ++){
+
+			if(filter != NULL && strstr(dayEntries->entries[j]->taskName, filter) == NULL) continue;
+
+			ts = localtime(&dayEntries->entries[j]->start);
+
+			if(dayEntries->entries[j]->end != 0){
+				dailyDuration += (dayEntries->entries[j]->end - dayEntries->entries[j]->start);
+			}
+			else{
+				dailyDuration += (NOW - dayEntries->entries[j]->start);
+			}
+
+			// Free the entry
+			free(dayEntries->entries[j]->taskName);
+			free(dayEntries->entries[j]);
+		}
+
+		totalDuration += dailyDuration;
+
+		// Free the entries
+		if(dayEntries->num > 0) free(dayEntries->entries);
+		free(dayEntries);
+	}
+
+	printf("%f", (totalDuration / (60.0 * 60.0)));
+
+	// Free the entries array
+	free(dailyEntries);
+	free(timestamps);
+}
+
 void cmd_duration(Entries* entries){
 	Entry* firstOngoing = findFirstOngoingEntry(entries);
 	if(firstOngoing == NULL){
@@ -163,9 +216,11 @@ int main(int argc, char** argv){
 	int durationFlag = flagSet("-d");
 	int printFlag = flagSet("-p");
 	int resumeFlag = flagSet("-r");
+	int hoursFlag = flagSet("-jh");
 	char* fileName = getArgOrDefault("-f", "time.txt");
 	char* taskName = getArgOrDefault("-t", "null");
 	char* printDuration = getArgOrDefault("-n", "14");
+	char* filter = getArgOrDefault("-filter", NULL);
 
 	if(argc == 1 || flagSet("-h") == 1 || flagSet("-help") == 1){
 		printf("Usage: %s <flags>\n", argv[0]);
@@ -175,9 +230,11 @@ int main(int argc, char** argv){
 		printf("-d: Duration. If a task is currently ongoing, detects how long it's been occuring for.\n");
 		printf("-p: Print. Prints all of the events within the last -n days.\n");
 		printf("-r: Resume. Copies the last entry name that occured, and resumes it at the current time.\n");
+		printf("-jh: Print just the number of hours in the sheet.\n");
 		printf("-f: The file to use for storage. Defaults to \"time.txt\"\n");
 		printf("-t: The task name to utilize. Defaults to \"null\"\n");
 		printf("-n: The number of days to print. Defaults to 14.\n");
+		printf("-filter: An optional string by which will only select entries beginning with the word. Defaults to no filter.\n");
 		return 0;
 	}
 
@@ -188,11 +245,13 @@ int main(int argc, char** argv){
 	}else if(endFlag){
 		cmd_end(fileName, entries);
 	}else if(printFlag){
-		cmd_print(entries, printDuration);
+		cmd_print(entries, printDuration, filter);
 	}else if(durationFlag){
 		cmd_duration(entries);
 	}else if(resumeFlag){
 		cmd_resume(fileName, entries);
+	}else if(hoursFlag){
+		cmd_hours(entries, filter);
 	}
 
 
